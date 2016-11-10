@@ -15,12 +15,13 @@ object Seller {
   final val DEFAULT_BID_TIME = 15 seconds
   final val DEFAULT_DEL_TIME = 15 seconds
 
-  def apply(auctionsQuantity: Int) = Props(new Seller(auctionsQuantity))
+  def apply(titles: List[String]) = Props(new Seller(titles))
 }
 
-class Seller(var auctionsQuantity: Int) extends Actor {
+class Seller(var titles: List[String]) extends Actor {
   import context._
   import Seller._
+  var auctionsQuantity: Int = 0
   var auctions: Set[ActorRef] = Set()
   override def receive: Receive = LoggingReceive {
     case AuctionExpired => handleExpiredAuction(sender)
@@ -28,9 +29,12 @@ class Seller(var auctionsQuantity: Int) extends Actor {
   }
 
   override def preStart() {
-    auctionsQuantity times {
-      val randomItem = getRandomItem()
-      auctions += context.actorOf(Auction(prices(rand.nextInt(prices.length)), DEFAULT_BID_TIME, DEFAULT_DEL_TIME, randomItem, self), randomItem.replace(" ", "__") + System.currentTimeMillis())
+    for (title <- titles) {
+      auctions += context.actorOf(Auction(prices(rand.nextInt(prices.length)), DEFAULT_BID_TIME, DEFAULT_DEL_TIME, title, self), title.replace(" ", "_"))
+      auctionsQuantity += 1
+    }
+    for (auction <- auctions) {
+      auction ! StartAuction
     }
   }
 

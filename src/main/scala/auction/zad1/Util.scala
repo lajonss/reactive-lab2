@@ -1,5 +1,11 @@
 package auction.zad1
 
+import scala.concurrent._
+import scala.concurrent.duration._
+
+import java.time.LocalDateTime
+import java.time.{Duration => JDuration}
+import java.time.temporal._
 import java.util.Random
 
 object Util {
@@ -28,4 +34,16 @@ object Util {
     }
 
   def getRandomAmountOfMoney(): Int = rand.nextInt(200)
+
+  implicit class RichDateTime(val localDateTime: LocalDateTime) extends AnyVal {
+    def +(duration: Duration): LocalDateTime = {
+      localDateTime.plus(JDuration.ofMillis(duration.toMillis))
+    }
+    def -(date: LocalDateTime): FiniteDuration = {
+      ChronoUnit.SECONDS.between(localDateTime, date) seconds
+    }
+    def <(date: LocalDateTime): Boolean = {
+      localDateTime.isBefore(date)
+    }
+  }
 }

@@ -10,21 +10,18 @@ import scala.concurrent.ExecutionContext.Implicits.global._
 import auction.zad1.Messages._
 
 object Buyer {
-    def apply(money: Int, subject: String) = Props(new Buyer(money, subject))
+    def apply(money: Int) = Props(new Buyer(money))
 }
 
-class Buyer(var money: Int, var subject: String) extends Actor {
+class Buyer(var money: Int) extends Actor {
     import context._
     var auctions: Map[String, ActorRef] = Map()
     override def receive: Receive = LoggingReceive {
+        case GainInterest(subject) => AuctionSearch.getAuctionSearch(context) ! AuctionQuery(subject)
         case AuctionQueryResult(result) => handleQueryResult(result)
         case WonAuction(x) => handleWonAuction(sender, x)
         case BidTopped(bidAmount, _) => handleBidTopped(sender, bidAmount)
         case BidTooLow(bidAmount) => handleBidTopped(sender, bidAmount)
-    }
-
-    override def preStart() {
-      AuctionSearch.getAuctionSearch(context) ! AuctionQuery(subject)
     }
 
     private def handleQueryResult(result: Map[String, ActorRef]) {
