@@ -6,6 +6,7 @@ import akka.event.LoggingReceive
 import scala.concurrent._
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global._
+import com.typesafe.config._
 
 import auction.zad1.Messages._
 import auction.zad1.Util._
@@ -28,7 +29,8 @@ class AuctionPublisher extends Actor {
 
 object AuctionPublisherApp extends App {
   import AuctionPublisher._
-  private val system: ActorSystem = ActorSystem(SYSTEM)
+  val config = ConfigFactory.load()
+  private val system: ActorSystem = ActorSystem(SYSTEM, config.getConfig("publisher").withFallback(config))
   private val publisher = system.actorOf(AuctionPublisher(), ACTOR)
   Await.result(system.whenTerminated, Duration.Inf)
 }

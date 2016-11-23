@@ -6,12 +6,14 @@ import akka.event.LoggingReceive
 import scala.concurrent._
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global._
+import com.typesafe.config._
 
 import auction.zad1.Messages._
 import auction.zad1.Util._
 
 object AuctionSystem extends App {
-  private val system: ActorSystem = ActorSystem("zad1")
+  val config = ConfigFactory.load()
+  private val system: ActorSystem = ActorSystem("zad1", config.getConfig("auctionsystem").withFallback(config))
   val auctionSearch = system.actorOf(AuctionSearch(), AuctionSearch.AUCTION_SEARCH_PATH)
   val notifier = system.actorOf(Notifier(system.actorSelection(AuctionPublisher.PATH)), Notifier.LOCAL_NOTIFIER)
   createSystem(system)
