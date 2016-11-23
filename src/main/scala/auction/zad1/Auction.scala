@@ -94,7 +94,7 @@ class Auction(var startingPrice: Int, var bidTime: FiniteDuration, var deleteTim
           goto(Ended) applying AuctionEnded
         }
         case Event(Relist, _) =>
-            println("Auction " + self.path + " expired")
+            println("Auction " + self.path + " relisted")
             cancelTimer(DELETE_TIMER)
             setTimer(BID_TIMER, BidTimerExpired, bidTime, false)
             goto(Created) applying Relisted(LocalDateTime.now)
@@ -109,16 +109,16 @@ class Auction(var startingPrice: Int, var bidTime: FiniteDuration, var deleteTim
                 stay replying BidTooLow(bid)
             }
         case Event(BidTimerExpired, Data(_, winner, winnerBid)) =>
-            cancelTimer(BID_TIMER)
-            setTimer(DELETE_TIMER, DeleteTimerExpired, deleteTime, false)
             winner ! WonAuction(winnerBid)
             seller ! AuctionSold(winner, winnerBid)
             println("Auction " + self.path + " sold to " + winner.path + " for " + winnerBid)
+            setTimer(DELETE_TIMER, DeleteTimerExpired, deleteTime, false)
             goto(Sold) applying DeleteTimerStarted(LocalDateTime.now)
     }
 
     when(Sold) {
         case Event(DeleteTimerExpired, Data(_, winner, highestBid)) => {
+          println("Auction " + self.path + " is being deleted")
           AuctionSearch.getAuctionSearch(context) ! AuctionSold(winner, highestBid)
           goto(Ended) applying AuctionEnded
         }
@@ -127,10 +127,10 @@ class Auction(var startingPrice: Int, var bidTime: FiniteDuration, var deleteTim
     when(Ended) {
       case _ => stay
     }
-
-    onTransition {
-      case _ -> Ended => stop()
-    }
+    //
+    // onTransition {
+    //   case _ -> Ended => stop()
+    // }
 
     //initialize()
 
@@ -205,8 +205,10 @@ class Auction(var startingPrice: Int, var bidTime: FiniteDuration, var deleteTim
       stateData match {
         case StartedPrice(at, _) => {
           if(at + bidTime < now) {
+            println("[RESTORETIMER] setting time")
             setTimer(BID_TIMER, BidTimerExpired, bidTime - (now - at), false)
           } else {
+            println("[RESTORETIMER] instant expire")
             self ! BidTimerExpired
           }
         }

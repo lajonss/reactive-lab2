@@ -12,8 +12,8 @@ import auction.zad1.Util._
 
 object Seller {
   final val prices = Array(10, 20, 30, 40, 50, 60)
-  final val DEFAULT_BID_TIME = 15 seconds
-  final val DEFAULT_DEL_TIME = 15 seconds
+  final val DEFAULT_BID_TIME = 30 seconds
+  final val DEFAULT_DEL_TIME = 10 seconds
 
   def apply(titles: List[String]) = Props(new Seller(titles))
 }

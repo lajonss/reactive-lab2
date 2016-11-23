@@ -34,11 +34,15 @@ object AuctionSystem extends App {
     import system._
     val buyer1 = system.actorOf(Buyer(1000), "buyer1")
     val buyer2 = system.actorOf(Buyer(1000), "buyer2")
-    val seller = system.actorOf(Seller(List("warszawa V8 1974")), "seller")
-    system.scheduler.scheduleOnce(3 seconds, new Runnable {
+    system.scheduler.scheduleOnce(1 second, new Runnable {
       def run() {
-        buyer1 ! GainInterest("warszawa")
-        buyer2 ! GainInterest("warszawa")
+        val seller = system.actorOf(Seller(List("warszawa V8 1974")), "seller")
+        system.scheduler.scheduleOnce(1 second, new Runnable {
+          def run() {
+            buyer1 ! GainInterest("warszawa")
+            buyer2 ! GainInterest("warszawa")
+          }
+        })
       }
     })
   }
