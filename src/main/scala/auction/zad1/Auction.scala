@@ -77,6 +77,7 @@ class Auction(var startingPrice: Int, var bidTime: FiniteDuration, var deleteTim
           stay applying BidTimerStarted(LocalDateTime.now)
         case Event(Bid(bid), StartedPrice(_, price)) =>
             if(price < bid) {
+                Notifier.getNotifier(context) ! Notify(title, sender, bid)
                 goto(Activated) applying Bidded(LocalDateTime.now, bid, sender)
             } else {
                 stay replying BidTooLow(bid)
@@ -104,6 +105,7 @@ class Auction(var startingPrice: Int, var bidTime: FiniteDuration, var deleteTim
         case Event(Bid(bid), Data(_, previousWinner, previousBid)) =>
             if(previousBid < bid) {
                 previousWinner ! BidTopped(previousBid, bid)
+                Notifier.getNotifier(context) ! Notify(title, sender, bid)
                 stay applying Bidded(LocalDateTime.now, bid, sender)
             } else {
                 stay replying BidTooLow(bid)
