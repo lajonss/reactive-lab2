@@ -127,12 +127,6 @@ class Auction(var startingPrice: Int, var bidTime: FiniteDuration, var deleteTim
     when(Ended) {
       case _ => stay
     }
-    //
-    // onTransition {
-    //   case _ -> Ended => stop()
-    // }
-
-    //initialize()
 
     private def notifyPreviousWinner(previousWinner: ActorRef, previousBid: Int, bid: Int) {
         previousWinner ! BidTopped(previousBid, bid)
@@ -183,14 +177,14 @@ class Auction(var startingPrice: Int, var bidTime: FiniteDuration, var deleteTim
       val now = LocalDateTime.now
       stateData match {
         case StartedPrice(at, _) => {
-          if(at + deleteTime < now) {
+          if(now < at + deleteTime) {
             setTimer(DELETE_TIMER, DeleteTimerExpired, deleteTime - (now - at), false)
           } else {
             self ! DeleteTimerExpired
           }
         }
         case Data(at, _, _) => {
-          if(at + deleteTime < now) {
+          if(now < at + deleteTime) {
             setTimer(DELETE_TIMER, DeleteTimerExpired, deleteTime - (now - at), false)
           } else {
             self ! DeleteTimerExpired
@@ -204,7 +198,7 @@ class Auction(var startingPrice: Int, var bidTime: FiniteDuration, var deleteTim
       val now = LocalDateTime.now
       stateData match {
         case StartedPrice(at, _) => {
-          if(at + bidTime < now) {
+          if(now < at + bidTime) {
             println("[RESTORETIMER] setting time")
             setTimer(BID_TIMER, BidTimerExpired, bidTime - (now - at), false)
           } else {
@@ -213,7 +207,7 @@ class Auction(var startingPrice: Int, var bidTime: FiniteDuration, var deleteTim
           }
         }
         case Data(at, _, _) => {
-          if(at + bidTime < now) {
+          if(now < at + bidTime) {
             setTimer(BID_TIMER, BidTimerExpired, bidTime - (now - at), false)
           } else {
             self ! BidTimerExpired
