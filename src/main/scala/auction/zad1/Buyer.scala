@@ -42,7 +42,11 @@ class Buyer(var money: Int) extends Actor {
         val bidAmount1 = bidAmount + 2
         if(bidAmount1 <= money) {
             money = money - bidAmount1
-            auction ! Bid(bidAmount1)
+            context.system.scheduler.scheduleOnce(1 second, new Runnable {
+              def run() {
+                auction ! Bid(bidAmount1)
+              }
+            })
         }
     }
 }
