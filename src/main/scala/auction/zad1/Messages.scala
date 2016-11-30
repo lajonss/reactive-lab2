@@ -19,4 +19,5 @@ object Messages {
     final case class GainInterest(subject: String)
 
     final case class Notify(title: String, who: ActorRef, bid: Int)
+    case object NotifySuccess
 }

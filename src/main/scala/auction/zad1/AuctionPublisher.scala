@@ -20,7 +20,9 @@ object AuctionPublisher {
 
 class AuctionPublisher extends Actor {
   override def receive: Receive = LoggingReceive {
-    case Notify(title, who, bid) => println("[" + title + "] " + who + " bid " + bid)
+    case Notify(title, who, bid) =>
+      println("[" + title + "] " + who + " bid " + bid)
+      sender ! NotifySuccess
   }
   override def preStart() = {
     println("AuctionPublisher listening at " + self.path)
