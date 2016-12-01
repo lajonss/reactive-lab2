@@ -11,9 +11,8 @@ import auction.zad1.Messages._
 import auction.zad1.Util._
 
 object AuctionSearch {
-  val AUCTION_SEARCH_PATH = "AuctionSearch"
+  val AUCTION_SEARCH_PATH = MasterSearch.MASTER_SEARCH_PATH
   def getAuctionSearch(context: ActorContext): ActorSelection = context.actorSelection("/user/" + AuctionSearch.AUCTION_SEARCH_PATH)
-
   def apply() = Props(new AuctionSearch())
 }
 

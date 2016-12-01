@@ -12,18 +12,52 @@ import auction.zad1.Messages._
 import auction.zad1.Util._
 
 object AuctionSystem extends App {
-    val config = ConfigFactory.load()
-    private val system: ActorSystem = ActorSystem("auctionsystem", config.getConfig("auctionsystem").withFallback(config))
+    private val system: ActorSystem = ActorSystem("auctionsystem")
     val notifier = system.actorOf(Notifier(system.actorSelection(AuctionPublisher.PATH)), Notifier.LOCAL_NOTIFIER)
-    val auctionSearch = system.actorOf(AuctionSearch(), AuctionSearch.AUCTION_SEARCH_PATH)
-    createSystem(system, 20, 5, 10)
-
+    val auctionSearch = system.actorOf(MasterSearch(), MasterSearch.MASTER_SEARCH_PATH)
+    val querier = system.actorOf(Querier(50000, 10000))
+    querier ! Querier.StartTests
     Await.result(system.whenTerminated, Duration.Inf)
+}
 
-    private def createSystem(system: ActorSystem, nBuyers: Int, nSellers: Int, nAuctions: Int) {
-      for (i <- 1 to nSellers)
-        system.actorOf(Seller(nAuctions), "seller" + i)
-      for (i <- 1 to nBuyers)
-        system.actorOf(Buyer(getRandomAmountOfMoney(), getRandomKeyword()), "buyer" + i)
+object Querier {
+    case object StartTests
+    case object StartQuerying
+
+    def apply(nAuctions: Int, nQueries: Int) = Props(new Querier(nAuctions, nQueries))
+}
+
+class Querier(var nAuctions: Int, var nQueries: Int) extends Actor with ActorLogging {
+    import Querier._
+    var createdAuctions = 0
+    var queried = 0
+    var received = 0
+    var time0 = System.currentTimeMillis()
+    override def receive: Receive = {
+        case StartTests =>
+            if (createdAuctions == nAuctions) {
+                self ! StartQuerying
+            } else {
+                MasterSearch.getMasterSearch(context) ! AuctionCreated("" + System.currentTimeMillis())
+                createdAuctions += 1
+                self ! StartTests
+            }
+        case StartQuerying =>
+            if (queried == nQueries) {
+                println("sending took " + (System.currentTimeMillis() - time0) + " ms")
+            } else {
+                MasterSearch.getMasterSearch(context) ! AuctionQuery("1")
+                queried += 1
+                self ! StartQuerying
+            }
+        case AuctionQueryResult(m) =>
+            if(m.size == 0) {
+                println("SIZE 0 FOUND")
+            }
+            received += 1
+            if(received == nQueries) {
+                println("Took " + (System.currentTimeMillis() - time0) + " ms")
+                context.system.terminate
+            }
     }
 }
