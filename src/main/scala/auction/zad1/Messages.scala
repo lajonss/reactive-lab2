@@ -15,4 +15,7 @@ object Messages {
     final case class AuctionCreated(title: String)
     final case class AuctionQuery(query: String)
     final case class AuctionQueryResult(result: Map[String, ActorRef])
+
+    final case class Notify(title: String, who: String, bid: Int)
+    case object NotifySuccess
 }
